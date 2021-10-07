@@ -3,21 +3,18 @@ const { validationResult } = require('express-validator/check');
 const Post = require('../models/post');
 
 exports.getPosts = (req, res, next) => {
-  res.status(200).json({
-    // allows as to conveniently return a response with json data, with the right headers being set and so on
-    posts: [
-      {
-        _id: '1',
-        title: 'First Post',
-        content: 'This is the first post!',
-        imageUrl: 'images/Steve.jpg',
-        creator: {
-          name: 'Lee',
-        },
-        createdAt: new Date(),
-      },
-    ],
-  });
+  Post.find()
+    .then((posts) => {
+      res //.json :  allows as to conveniently return a response with json data, with the right headers being set and so on
+        .status(200)
+        .json({ message: 'Fetched posts successfully.', posts: posts });
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next();
+    });
 };
 
 exports.createPost = (req, res, next) => {
@@ -43,6 +40,25 @@ exports.createPost = (req, res, next) => {
         message: 'Post crated successfully!',
         post: result,
       });
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next();
+    });
+};
+
+exports.getPost = (req, res, next) => {
+  const postId = req.params.postId;
+  Post.findById(postId)
+    .then((post) => {
+      if (!post) {
+        const error = new Error('Could nor find post.');
+        error.statusCode = 404;
+        throw error;
+      }
+      res.status(200).json({ message: 'Post fetched.', post: post });
     })
     .catch((err) => {
       if (!err.statusCode) {
