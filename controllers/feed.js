@@ -6,11 +6,25 @@ const { validationResult } = require('express-validator/check');
 const Post = require('../models/post');
 
 exports.getPosts = (req, res, next) => {
+  const currentPage = req.query.page || 1;
+  const perPage = 2;
+  let totalItems;
   Post.find()
+    .countDocuments()
+    .then((count) => {
+      totalItems = count;
+      return Post.find()
+        .skip((currentPage - 1) * perPage)
+        .limit(); // the amount of items I want to have on each page
+    })
     .then((posts) => {
       res //.json :  allows as to conveniently return a response with json data, with the right headers being set and so on
         .status(200)
-        .json({ message: 'Fetched posts successfully.', posts: posts });
+        .json({
+          message: 'Fetched posts successfully.',
+          posts: posts,
+          totalItems: totalItems,
+        });
     })
     .catch((err) => {
       if (!err.statusCode) {
